@@ -1,0 +1,24 @@
+targets:
+  $default:
+    builders:
+      generators|annotations: # generators|annotations: Refers to the simple_generator builder when dealing with files annotated with annotations.
+        enabled: true
+
+builders:
+  generators:
+    target: ":routable_builder" # Generator name
+    import: "package:routable_builder/routable_builder.dart"
+    builder_factories: ["generateConfigMethods"] # Builder name(BuilderOption) this is a definition
+    build_extensions: { ".dart": [".routes.part"] }
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]
+
+  injectable_builder:
+    target: ":routable_builder" # Generator name
+    import: "package:routable_builder/routable_builder.dart"
+    builder_factories: ["generateMethods"]
+    build_extensions: { ".dart": [".route.json"] }
+    auto_apply: dependents
+    runs_before: ["routable_builder|routable_builder"]
+    build_to: cache
