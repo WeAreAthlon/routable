@@ -1,11 +1,11 @@
 name: routable_annotations
 description: "A package containing the necessary annotations for `routable_builder`"
-version: 0.1.0
+version: 0.1.1
 homepage: "https://github.com/WeAreAthlon/routable"
 
 environment:
   sdk: ">=3.2.5 <4.0.0"
-  flutter: ">=1.17.0"
+  flutter: ">=3.22.0"
 
 dependencies:
   flutter:
