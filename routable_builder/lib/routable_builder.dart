@@ -32,11 +32,11 @@ class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
     final a = <Map>[];
     for (final entry in v.entries) {
       final rec = data.firstWhere((e) {
-        final avilable = e['name'] == entry.key;
+        final available = e['name'] == entry.key;
         final on = (e['on'] != null && parent != null)
             ? e['on'] == parent['name']
             : true;
-        return avilable && on;
+        return available && on;
       });
       final path =
           parent != null ? rec["path"].replaceFirst('/', '') : rec["path"];
