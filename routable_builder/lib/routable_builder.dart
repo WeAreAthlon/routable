@@ -28,21 +28,21 @@ class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
   }
 
   // Function to convert a simple node into the desired record format.
-  List<Map> record(Map v, List<Map> data, [Map? parrent]) {
+  List<Map> record(Map v, List<Map> data, [Map? parent]) {
     final a = <Map>[];
     for (final entry in v.entries) {
       final rec = data.firstWhere((e) {
         final avilable = e['name'] == entry.key;
-        final on = (e['on'] != null && parrent != null)
-            ? e['on'] == parrent['name']
+        final on = (e['on'] != null && parent != null)
+            ? e['on'] == parent['name']
             : true;
         return avilable && on;
       });
       final path =
-          parrent != null ? rec["path"].replaceFirst('/', '') : rec["path"];
+          parent != null ? rec["path"].replaceFirst('/', '') : rec["path"];
       final current = {
         ...rec,
-        "full_path": [if (parrent != null) parrent["full_path"], path]
+        "full_path": [if (parent != null) parent["full_path"], path]
             .join("/")
             .replaceFirst('//', '/'),
         "path": path,
