@@ -7,6 +7,7 @@ class Routable {
   final Type? extra;
   final Type? transition;
   final bool useParams;
+  final bool useQueryParams;
   const Routable({
     required this.path,
     this.on,
@@ -14,6 +15,7 @@ class Routable {
     this.useParams = false,
     this.isProtected = false,
     this.transition,
+    this.useQueryParams = false,
   });
 }
 
