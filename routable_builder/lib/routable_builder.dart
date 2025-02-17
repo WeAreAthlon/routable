@@ -1,4 +1,4 @@
-library injector_builder;
+library;
 
 import 'dart:async';
 import 'dart:convert';
