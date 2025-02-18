@@ -10,29 +10,24 @@ import 'package:glob/glob.dart';
 import 'package:routable_annotations/routable_annotations.dart';
 import 'package:source_gen/source_gen.dart';
 
-/// A simple string extension to capitalize the first letter of a string
 extension Capitalization on String {
-  /// Capitalize the first letter of a string
   String capitalize() {
     return '${this[0].toUpperCase()}${substring(1)}';
   }
 
-  /// Uncapitalized the first letter of a string
   String unCapitalize() {
     return '${this[0].toLowerCase()}${substring(1)}';
   }
 }
 
-/// A simple generator to generate the routes for the GoRouter
 class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
-  /// Function to build a tree from a list of strings
   tree(List a, int i, Map v) {
     if (i < a.length) {
       tree(a, i + 1, v[a[i]] ??= {});
     }
   }
 
-  /// Function to convert a simple node into the desired record format.
+  // Function to convert a simple node into the desired record format.
   List<Map> record(Map v, List<Map> data, [Map? parent]) {
     final a = <Map>[];
     for (final entry in v.entries) {
@@ -57,7 +52,6 @@ class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
     return a;
   }
 
-  /// Function to build a route from a map
   String buildRoute(Map v) {
     final List<String> params = [];
     patternToRegExp(
@@ -67,10 +61,14 @@ class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
         params.map((e) => "$e: state.pathParameters[\"$e\"]").join(", ");
     final extras =
         v['extra'] != null ? "params: state.extra as ${v['extra']}?" : "";
+    final queryParams = v['use_query_params'] == true
+        ? "queryParams: state.uri.queryParameters"
+        : "";
 
     final List<String> arguments = [
       if (paramsList != "") paramsList,
-      if (extras != "") extras
+      if (extras != "") extras,
+      if (queryParams != "") queryParams,
     ];
 
     return """
@@ -215,7 +213,6 @@ extension UriExtension on Uri {
 
 const TypeChecker _typeChecker = TypeChecker.fromRuntime(Routable);
 
-/// A simple generator to generate the routes for the GoRouter
 class RouteGenerator extends Generator {
   Map<String, dynamic> _buildRoute(
       ClassElement clazz,
@@ -232,8 +229,8 @@ class RouteGenerator extends Generator {
         );
         imports.add(transitionLib.identifier);
 
-        final superTypes =
-            element.allSupertypes.map((e) => e.getDisplayString());
+        final superTypes = element.allSupertypes
+            .map((e) => e.getDisplayString(withNullability: false));
 
         if (superTypes.where((type) => type.contains("Page")).isNotEmpty) {
           transitionName = element.displayName;
@@ -263,9 +260,14 @@ class RouteGenerator extends Generator {
       'path': route.read('path').stringValue,
       'protected': route.read('isProtected').boolValue,
       'force_params': route.read('useParams').boolValue,
-      'extra': route.peek('extra')?.typeValue.getDisplayString(),
+      'use_query_params': route.read('useQueryParams').boolValue,
+      'extra': route
+          .peek('extra')
+          ?.typeValue
+          .getDisplayString(withNullability: false),
       'transition': transitionName ?? "MaterialPage",
-      'on': route.peek('on')?.typeValue.getDisplayString(),
+      'on':
+          route.peek('on')?.typeValue.getDisplayString(withNullability: false),
       'imports': imports,
     };
   }
@@ -305,7 +307,6 @@ String _escapeGroup(String group, [String? name]) {
   return escapedGroup;
 }
 
-/// Converts a path pattern into a regular expression.
 RegExp patternToRegExp(String pattern, List<String> parameters) {
   final StringBuffer buffer = StringBuffer('^');
   int start = 0;
@@ -333,7 +334,6 @@ RegExp patternToRegExp(String pattern, List<String> parameters) {
   return RegExp(buffer.toString(), caseSensitive: false);
 }
 
-/// Generate the routes for the GoRouter
 Builder generateConfigMethods(BuilderOptions options) {
   // Step 1
   return LibraryBuilder(
@@ -342,7 +342,6 @@ Builder generateConfigMethods(BuilderOptions options) {
   );
 }
 
-/// Generate the routes meta data
 Builder generateMethods(BuilderOptions options) {
   return LibraryBuilder(
     RouteGenerator(),
