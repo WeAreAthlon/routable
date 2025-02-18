@@ -152,6 +152,26 @@ class ProductPage extends StatelessWidget {
 Routes.product.push(context, Product(id: 'item_id'));
 ```
 
+```dart
+@Routable(path: '/search', useQueryParams: true)
+class SearchPage extends StatelessWidget {
+  final Map<String, String>? queryParams;
+
+  SearchPage({this.queryParams});
+
+  ...
+}
+
+// Generated GoRoute for SearchPage
+GoRoute(
+  path: '/search',
+  pageBuilder: (context, state) => MaterialPage(
+    child: SearchPage(queryParams: state.uri.queryParameters),
+  ),
+),
+```
+
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
