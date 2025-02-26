@@ -163,9 +163,9 @@ GoRoute(
 ${imports.map((import) => "import '$import';").join("\n")}
 
 FutureOr<String?> Function(BuildContext, GoRouterState) _privateGuard(
-        Future<bool> authenticated) =>
+        Future<bool> Function() authenticated) =>
   (context, state) async {
-    final isAuthenticated = await authenticated;
+    final isAuthenticated = await authenticated();
 
     if (!isAuthenticated) return "$unauthenticatedPath";
     return null;
@@ -204,7 +204,7 @@ extension UriExtension on Uri {
   }
 }
 
-\$buildRoutes(Future<bool> authenticated) => [
+List<GoRoute>\$buildRoutes(Future<bool> Function() authenticated) => [
   ${result.map(buildRoute).join("\n")}
 ];
 """;
