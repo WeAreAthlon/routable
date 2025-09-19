@@ -345,7 +345,8 @@ Builder generateConfigMethods(BuilderOptions options) {
 Builder generateMethods(BuilderOptions options) {
   return LibraryBuilder(
     RouteGenerator(),
-    formatOutput: (generated) => generated.replaceAll(RegExp(r'//.*|\s'), ''),
+    formatOutput: (generated, _) =>
+        generated.replaceAll(RegExp(r'//.*|\s'), ''),
     generatedExtension: '.route.json',
   );
 }
