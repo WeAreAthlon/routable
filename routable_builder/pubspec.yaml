@@ -1,6 +1,6 @@
 name: routable_builder
 description: "Routable is a package that provides code generation for routing in Flutter applications"
-version: 1.1.0
+version: 1.1.1
 homepage: "https://github.com/WeAreAthlon/routable"
 
 environment:
