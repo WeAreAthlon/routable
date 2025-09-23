@@ -239,7 +239,7 @@ class _RouteGenerator extends Generator {
         );
         imports.add(transitionLib.identifier);
 
-        final superTypes = element.allSupertypes.map(
+        final superTypes = (element as ClassElement2).allSupertypes.map(
           (e) => e.getDisplayString(),
         );
 
@@ -264,7 +264,7 @@ class _RouteGenerator extends Generator {
     }
 
     return {
-      'name': clazz.name,
+      'name': clazz.displayName,
       'path': route.read('path').stringValue,
       'protected': route.read('isProtected').boolValue,
       'force_params': route.read('useParams').boolValue,
