@@ -20,6 +20,15 @@ extension on String {
   }
 }
 
+extension _WhereOrNull<T> on Iterable<T?> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    for (var element in this) {
+      if (test(element as T)) return element;
+    }
+    return null;
+  }
+}
+
 class _ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
   void tree(List a, int i, Map v) {
     if (i < a.length) {
@@ -126,7 +135,13 @@ GoRoute(
       final url = <String>[element['path']];
 
       while (element['on'] != null) {
-        element = jsonData.firstWhere((e) => e['name'] == element['on']);
+        final newElement = jsonData.firstWhereOrNull(
+          (e) => e['name'] == element['on'],
+        );
+        if (newElement == null) {
+          break;
+        }
+        element = newElement;
         path.add(element['name']);
         url.add(element['path']);
       }
@@ -232,7 +247,7 @@ class _RouteGenerator extends Generator {
     final route = ConstantReader(routeAnnotation);
     final transition = route.peek('transition')?.typeValue;
     String? transitionName;
-    if (transition?.element case final element?) {
+    if (transition?.element3 case final element?) {
       if (element is ClassElement2) {
         final transitionLib = libs.firstWhere(
           (e) => e.exportNamespace.definedNames2.values.contains(element),
@@ -255,9 +270,9 @@ class _RouteGenerator extends Generator {
 
     final extra = route.peek('extra')?.typeValue;
 
-    if (extra?.element is ClassElement2) {
+    if (extra?.element3 is ClassElement2) {
       final extraLib = libs.firstWhere(
-        (e) => e.exportNamespace.definedNames2.values.contains(extra?.element),
+        (e) => e.exportNamespace.definedNames2.values.contains(extra?.element3),
       );
 
       imports.add(extraLib.identifier);
