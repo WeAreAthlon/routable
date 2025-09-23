@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 1.2.2
+
+- update dependencies
+
 ## 1.2.1
 
 - update dependencies
