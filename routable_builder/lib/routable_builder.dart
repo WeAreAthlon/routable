@@ -3,7 +3,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/element2.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/build.dart';
 import 'package:glob/glob.dart';
@@ -33,18 +33,20 @@ class _ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
     for (final entry in v.entries) {
       final rec = data.firstWhere((e) {
         final available = e['name'] == entry.key;
-        final on = (e['on'] != null && parent != null)
-            ? e['on'] == parent['name']
-            : true;
+        final on =
+            (e['on'] != null && parent != null)
+                ? e['on'] == parent['name']
+                : true;
         return available && on;
       });
       final path =
           parent != null ? rec["path"].replaceFirst('/', '') : rec["path"];
       final current = {
         ...rec,
-        "full_path": [if (parent != null) parent["full_path"], path]
-            .join("/")
-            .replaceFirst('//', '/'),
+        "full_path": [
+          if (parent != null) parent["full_path"],
+          path,
+        ].join("/").replaceFirst('//', '/'),
         "path": path,
       };
       a.add({...current, "children": record(entry.value, data, current)});
@@ -55,15 +57,19 @@ class _ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
   String buildRoute(Map v) {
     final List<String> params = [];
     _patternToRegExp(
-        v['force_params'] == true ? v['full_path'] : v['path'], params);
+      v['force_params'] == true ? v['full_path'] : v['path'],
+      params,
+    );
 
-    final paramsList =
-        params.map((e) => "$e: state.pathParameters[\"$e\"]").join(", ");
+    final paramsList = params
+        .map((e) => "$e: state.pathParameters[\"$e\"]")
+        .join(", ");
     final extras =
         v['extra'] != null ? "params: state.extra as ${v['extra']}?" : "";
-    final queryParams = v['use_query_params'] == true
-        ? "queryParams: state.uri.queryParameters"
-        : "";
+    final queryParams =
+        v['use_query_params'] == true
+            ? "queryParams: state.uri.queryParameters"
+            : "";
 
     final List<String> arguments = [
       if (paramsList != "") paramsList,
@@ -87,7 +93,10 @@ GoRoute(
 
   @override
   generateForAnnotatedElement(
-      Element element, ConstantReader annotation, BuildStep buildStep) async {
+    Element2 element,
+    ConstantReader annotation,
+    BuildStep buildStep,
+  ) async {
     final generateForDir = annotation
         .read('generateForDir')
         .listValue
@@ -134,20 +143,20 @@ GoRoute(
     for (var path in paths) {
       final p = urls[paths.indexOf(path)].join('');
 
-      String name = path.last
-          .unCapitalize()
-          .replaceAll(RegExp('page', caseSensitive: false), '');
+      String name = path.last.unCapitalize().replaceAll(
+        RegExp('page', caseSensitive: false),
+        '',
+      );
 
       if (routes.where((r) => r["name"] == name).isNotEmpty) {
-        String parent = path[path.length - 2]
-            .replaceAll(RegExp('page', caseSensitive: false), '');
+        String parent = path[path.length - 2].replaceAll(
+          RegExp('page', caseSensitive: false),
+          '',
+        );
         name = '${parent.unCapitalize()}${name.capitalize()}';
       }
 
-      routes.add({
-        "path": p.replaceAll(RegExp("\\/+"), "/"),
-        "name": name,
-      });
+      routes.add({"path": p.replaceAll(RegExp("\\/+"), "/"), "name": name});
     }
 
     final imports = <String>{
@@ -215,42 +224,41 @@ const TypeChecker _typeChecker = TypeChecker.typeNamed(Routable);
 
 class _RouteGenerator extends Generator {
   Map<String, dynamic> _buildRoute(
-      ClassElement clazz,
-      DartObject routeAnnotation,
-      List<LibraryElement> libs,
-      List<String> imports) {
+    ClassElement2 clazz,
+    DartObject routeAnnotation,
+    List<LibraryElement2> libs,
+    List<String> imports,
+  ) {
     final route = ConstantReader(routeAnnotation);
     final transition = route.peek('transition')?.typeValue;
     String? transitionName;
     if (transition?.element case final element?) {
-      if (element is ClassElement) {
+      if (element is ClassElement2) {
         final transitionLib = libs.firstWhere(
           (e) => e.exportNamespace.definedNames2.values.contains(element),
         );
         imports.add(transitionLib.identifier);
 
-        final superTypes =
-            element.allSupertypes.map((e) => e.getDisplayString());
+        final superTypes = element.allSupertypes.map(
+          (e) => e.getDisplayString(),
+        );
 
         if (superTypes.where((type) => type.contains("Page")).isNotEmpty) {
           transitionName = element.displayName;
         } else {
-          throw Exception(
-            'Transition must be a subclass of Page',
-          );
+          throw Exception('Transition must be a subclass of Page');
         }
       } else {
-        throw Exception(
-          'Transition must be a subclass of Page',
-        );
+        throw Exception('Transition must be a subclass of Page');
       }
     }
 
     final extra = route.peek('extra')?.typeValue;
 
-    if (extra?.element is ClassElement) {
-      final extraLib = libs.firstWhere((e) =>
-          e.exportNamespace.definedNames2.values.contains(extra?.element));
+    if (extra?.element is ClassElement2) {
+      final extraLib = libs.firstWhere(
+        (e) => e.exportNamespace.definedNames2.values.contains(extra?.element),
+      );
 
       imports.add(extraLib.identifier);
     }
@@ -277,7 +285,8 @@ class _RouteGenerator extends Generator {
         final imports = <String>[];
 
         final lib = libs.firstWhere(
-            (e) => e.exportNamespace.definedNames2.values.contains(clazz));
+          (e) => e.exportNamespace.definedNames2.values.contains(clazz),
+        );
 
         imports.add(lib.identifier);
 
@@ -296,7 +305,9 @@ final RegExp _parameterRegExp = RegExp(r':(\w+)(\((?:\\.|[^\\()])+\))?');
 
 String _escapeGroup(String group, [String? name]) {
   final String escapedGroup = group.replaceFirstMapped(
-      RegExp(r'[:=!]'), (Match match) => '\\${match[0]}');
+    RegExp(r'[:=!]'),
+    (Match match) => '\\${match[0]}',
+  );
   if (name != null) {
     return '(?<$name>$escapedGroup)';
   }
@@ -312,9 +323,10 @@ RegExp _patternToRegExp(String pattern, List<String> parameters) {
     }
     final String name = match[1]!;
     final String? optionalPattern = match[2];
-    final String regex = optionalPattern != null
-        ? _escapeGroup(optionalPattern, name)
-        : '(?<$name>[^/]+)';
+    final String regex =
+        optionalPattern != null
+            ? _escapeGroup(optionalPattern, name)
+            : '(?<$name>[^/]+)';
     buffer.write(regex);
     parameters.add(name);
     start = match.end;
@@ -332,18 +344,15 @@ RegExp _patternToRegExp(String pattern, List<String> parameters) {
 
 // ignore: public_member_api_docs
 Builder generateConfigMethods(BuilderOptions options) {
-  return LibraryBuilder(
-    _ConfigGenerator(),
-    generatedExtension: '.routes.dart',
-  );
+  return LibraryBuilder(_ConfigGenerator(), generatedExtension: '.routes.dart');
 }
 
 // ignore: public_member_api_docs
 Builder generateMethods(BuilderOptions options) {
   return LibraryBuilder(
     _RouteGenerator(),
-    formatOutput: (generated, _) =>
-        generated.replaceAll(RegExp(r'//.*|\s'), ''),
+    formatOutput:
+        (generated, _) => generated.replaceAll(RegExp(r'//.*|\s'), ''),
     generatedExtension: '.route.json',
   );
 }
