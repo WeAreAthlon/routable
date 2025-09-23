@@ -10,7 +10,7 @@ import 'package:glob/glob.dart';
 import 'package:routable_annotations/routable_annotations.dart';
 import 'package:source_gen/source_gen.dart';
 
-extension Capitalization on String {
+extension on String {
   String capitalize() {
     return '${this[0].toUpperCase()}${substring(1)}';
   }
@@ -20,7 +20,7 @@ extension Capitalization on String {
   }
 }
 
-class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
+class _ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
   tree(List a, int i, Map v) {
     if (i < a.length) {
       tree(a, i + 1, v[a[i]] ??= {});
@@ -54,7 +54,7 @@ class ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
 
   String buildRoute(Map v) {
     final List<String> params = [];
-    patternToRegExp(
+    _patternToRegExp(
         v['force_params'] == true ? v['full_path'] : v['path'], params);
 
     final paramsList =
@@ -211,9 +211,9 @@ List<GoRoute>\$buildRoutes(Future<bool> Function() authenticated) => [
   }
 }
 
-const TypeChecker _typeChecker = TypeChecker.fromRuntime(Routable);
+const TypeChecker _typeChecker = TypeChecker.typeNamed(Routable);
 
-class RouteGenerator extends Generator {
+class _RouteGenerator extends Generator {
   Map<String, dynamic> _buildRoute(
       ClassElement clazz,
       DartObject routeAnnotation,
@@ -225,12 +225,12 @@ class RouteGenerator extends Generator {
     if (transition?.element case final element?) {
       if (element is ClassElement) {
         final transitionLib = libs.firstWhere(
-          (e) => e.exportNamespace.definedNames.values.contains(element),
+          (e) => e.exportNamespace.definedNames2.values.contains(element),
         );
         imports.add(transitionLib.identifier);
 
-        final superTypes = element.allSupertypes
-            .map((e) => e.getDisplayString(withNullability: false));
+        final superTypes =
+            element.allSupertypes.map((e) => e.getDisplayString());
 
         if (superTypes.where((type) => type.contains("Page")).isNotEmpty) {
           transitionName = element.displayName;
@@ -250,7 +250,7 @@ class RouteGenerator extends Generator {
 
     if (extra?.element is ClassElement) {
       final extraLib = libs.firstWhere((e) =>
-          e.exportNamespace.definedNames.values.contains(extra?.element));
+          e.exportNamespace.definedNames2.values.contains(extra?.element));
 
       imports.add(extraLib.identifier);
     }
@@ -261,13 +261,9 @@ class RouteGenerator extends Generator {
       'protected': route.read('isProtected').boolValue,
       'force_params': route.read('useParams').boolValue,
       'use_query_params': route.read('useQueryParams').boolValue,
-      'extra': route
-          .peek('extra')
-          ?.typeValue
-          .getDisplayString(withNullability: false),
+      'extra': route.peek('extra')?.typeValue.getDisplayString(),
       'transition': transitionName ?? "MaterialPage",
-      'on':
-          route.peek('on')?.typeValue.getDisplayString(withNullability: false),
+      'on': route.peek('on')?.typeValue.getDisplayString(),
       'imports': imports,
     };
   }
@@ -281,7 +277,7 @@ class RouteGenerator extends Generator {
         final imports = <String>[];
 
         final lib = libs.firstWhere(
-            (e) => e.exportNamespace.definedNames.values.contains(clazz));
+            (e) => e.exportNamespace.definedNames2.values.contains(clazz));
 
         imports.add(lib.identifier);
 
@@ -307,7 +303,7 @@ String _escapeGroup(String group, [String? name]) {
   return escapedGroup;
 }
 
-RegExp patternToRegExp(String pattern, List<String> parameters) {
+RegExp _patternToRegExp(String pattern, List<String> parameters) {
   final StringBuffer buffer = StringBuffer('^');
   int start = 0;
   for (final RegExpMatch match in _parameterRegExp.allMatches(pattern)) {
@@ -334,18 +330,20 @@ RegExp patternToRegExp(String pattern, List<String> parameters) {
   return RegExp(buffer.toString(), caseSensitive: false);
 }
 
+// ignore: public_member_api_docs
 Builder generateConfigMethods(BuilderOptions options) {
-  // Step 1
   return LibraryBuilder(
-    ConfigGenerator(),
+    _ConfigGenerator(),
     generatedExtension: '.routes.dart',
   );
 }
 
+// ignore: public_member_api_docs
 Builder generateMethods(BuilderOptions options) {
   return LibraryBuilder(
-    RouteGenerator(),
-    formatOutput: (generated) => generated.replaceAll(RegExp(r'//.*|\s'), ''),
+    _RouteGenerator(),
+    formatOutput: (generated, _) =>
+        generated.replaceAll(RegExp(r'//.*|\s'), ''),
     generatedExtension: '.route.json',
   );
 }
