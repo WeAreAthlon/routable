@@ -21,7 +21,7 @@ extension on String {
 }
 
 class _ConfigGenerator extends GeneratorForAnnotation<RouteConfig> {
-  tree(List a, int i, Map v) {
+  void tree(List a, int i, Map v) {
     if (i < a.length) {
       tree(a, i + 1, v[a[i]] ??= {});
     }
